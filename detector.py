@@ -53,7 +53,7 @@ class Server(asyncore.dispatcher):
         self.listen(1000)
 
     def handle_accepted(self, sock, addr):
-        print('Incoming connection from %s' % repr(addr))
+        logging.info('Incoming connection from %s' % repr(addr))
         handler = Handler(sock, addr)
 
 
