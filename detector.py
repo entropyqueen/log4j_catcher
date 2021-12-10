@@ -12,8 +12,10 @@ HOST = ''
 PORT = 8080
 nb = 0
 
-logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
-
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s:%(message)s',
+    level=logging.DEBUG
+)
 
 class Handler(asyncore.dispatcher_with_send):
     
@@ -32,12 +34,14 @@ class Handler(asyncore.dispatcher_with_send):
                     p = p.decode('utf-8')
                     logging.info(f'Found payload jndi from {repr(self.addr)}')
                     logging.info(f'URL: {p}')
+                    with open(f'logs_{time.time()}_data.bin', 'wb') as f:
+                        f.write(data)
                     Thread(target=self.get_payload, args=[p]).start()
 
     def get_payload(self, p):
         try:
             r = requests.get(f"http://{p}")
-            with open('logs_{time.time()}.bin', 'wb') as f:
+            with open(f'logs_{time.time()}.bin', 'wb') as f:
                 f.write(r.text)
         except Exception as e:
             logging.error(e)
