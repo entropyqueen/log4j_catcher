@@ -1,6 +1,6 @@
 
 import asyncore
-import requests
+import socket
 import logging
 import time
 import re
@@ -10,12 +10,12 @@ from threading import Thread
 
 HOST = ''
 PORT = 8080
-nb = 0
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s',
     level=logging.DEBUG
 )
+
 
 class Handler(asyncore.dispatcher_with_send):
     
@@ -28,7 +28,7 @@ class Handler(asyncore.dispatcher_with_send):
         if data:
             if not data:
                 return
-            x = re.findall(b'\$\{jndi:.*://(.*)\}', data)
+            x = re.findall(b'\$\{.*[jJ].*[nN].*[dD].*[iI]:.*[lL].*[dD].*[aA].*[pP]://(.*)\}', data)
             if len(x) >= 1:
                 for p in x:
                     p = p.decode('utf-8')
@@ -36,13 +36,17 @@ class Handler(asyncore.dispatcher_with_send):
                     logging.info(f'URL: {p}')
                     with open(f'logs_{time.time()}_data.bin', 'wb') as f:
                         f.write(data)
-                    Thread(target=self.get_payload, args=[p]).start()
+                    h, p = p.split('/')[0].split(':')
+                    Thread(target=self.get_payload, args=[h, int(p)]).start()
 
-    def get_payload(self, p):
+    def get_payload(self, h, p):
         try:
-            r = requests.get(f"http://{p}")
             with open(f'logs_{time.time()}.bin', 'wb') as f:
+                s = socket.socket()
+                s.connect((h, p))
+                r = s.recv(4096)
                 f.write(r.text)
+            s.close()
         except Exception as e:
             logging.error(e)
 
