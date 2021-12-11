@@ -28,20 +28,20 @@ class Handler(asyncore.dispatcher_with_send):
         if data:
             if not data:
                 return
-            x = re.findall(b'\$\{.*[jJ].*[nN].*[dD].*[iI]:.*[lL].*[dD].*[aA].*[pP]://(.*)\}', data)
+            x = re.findall(b'\$\{.*//(.*)\}', data)
             if len(x) >= 1:
                 for p in x:
                     p = p.decode('utf-8')
                     logging.info(f'Found payload jndi from {repr(self.addr)}')
                     logging.info(f'URL: {p}')
-                    with open(f'logs_{time.time()}_data.bin', 'wb') as f:
+                    with open(f'logs_{int(time.time())}_data.bin', 'wb') as f:
                         f.write(data)
                     h, p = p.split('/')[0].split(':')
                     Thread(target=self.get_payload, args=[h, int(p)]).start()
 
     def get_payload(self, h, p):
         try:
-            with open(f'logs_{time.time()}.bin', 'wb') as f:
+            with open(f'logs_{int(time.time())}.bin', 'wb') as f:
                 s = socket.socket()
                 s.connect((h, p))
                 r = s.recv(4096)
