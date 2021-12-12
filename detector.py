@@ -11,10 +11,19 @@ from threading import Thread
 HOST = ''
 PORT = 8080
 
+# Create console\stream handler
 logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s',
     level=logging.DEBUG
 )
+# Create file handler
+fh = logging.FileHandler('catcher.log')
+fh.setLevel(logging.DEBUG)
+# Create formatter
+formatter = logging.Formatter('%(asctime)s %(levelname)s:%(message)s')
+fh.setFormatter(formatter)
+# Add the handlers to the root logger
+logging.getLogger('').addHandler(fh)
 
 
 class Handler(asyncore.dispatcher_with_send):
