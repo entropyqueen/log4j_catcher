@@ -39,6 +39,7 @@ class Handler(asyncore.dispatcher_with_send):
         super().__init__(sock)
         self.addr = addr
         self.dd = DeepDecoder()
+        self.inspector = YaraInspector(open('log4j_exploit.yara', 'r').read())
 
     def handle_read(self):
         data = self.recv(16384).strip()
@@ -47,8 +48,7 @@ class Handler(asyncore.dispatcher_with_send):
                 return
 
             layer = self.dd.decode(data)
-            inspector = YaraInspector(open('log4j_exploit.yara', 'r').read())
-            inspector(layer)
+            self.inspector(layer)
             for leaf in layer.leaves:
                 if leaf._matching_rules:
                     for rule in leaf._matching_rules:
@@ -102,4 +102,3 @@ if len(sys.argv) == 2:
 
 server = Server(HOST, PORT)
 asyncore.loop()
-
