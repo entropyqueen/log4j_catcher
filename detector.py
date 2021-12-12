@@ -36,7 +36,12 @@ class Handler(asyncore.dispatcher_with_send):
                     logging.info(f'URL: {p}')
                     with open(f'logs_{int(time.time())}_data.bin', 'wb') as f:
                         f.write(data)
-                    h, p = p.split('/')[0].split(':')
+                    try:
+                        h, p = p.split('/')[0].split(':')
+                    except:
+                        h = p.split('/')[0]
+                        p = 389
+
                     Thread(target=self.get_payload, args=[h, int(p)]).start()
 
     def get_payload(self, h, p):
