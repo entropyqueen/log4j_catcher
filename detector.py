@@ -53,7 +53,7 @@ class Handler(asyncore.dispatcher_with_send):
                 if leaf._matching_rules:
                     for rule in leaf._matching_rules:
                         rule_name = rule.get('rule')
-                        if 'og4' in rule_name:
+                        if 'Log4Shell' in rule_name:
                             with open(f'logs/logs_{int(time.time())}_data.bin', 'wb') as f:
                                 f.write(data)
                             self.analyze_payload(data, leaf.raw_data)
