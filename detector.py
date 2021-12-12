@@ -58,8 +58,8 @@ class Handler(asyncore.dispatcher_with_send):
             with open(f'logs_{int(time.time())}.bin', 'wb') as f:
                 s = socket.socket()
                 s.connect((h, p))
-                r = s.recv(4096)
-                f.write(r.text)
+                r = s.recv(16384)
+                f.write(r)
             s.close()
         except Exception as e:
             logging.error(e)
