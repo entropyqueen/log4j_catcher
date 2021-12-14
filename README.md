@@ -14,8 +14,16 @@ pip install -r requirements.txt
 ## Running
 
 For ports that don't require TLS
+
+with python:
 ```shell
 python3 detector.py [port]
+```
+
+with docker:
+```shell
+docker build -t log4j_catcher .
+docker run -itp 8080:8080 --env PORT=8080 log4j_catcher
 ```
 
 For services with TLS it is recommended to have another component to handle the TLS protocol.
