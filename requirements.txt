@@ -1,1 +1,3 @@
 git+https://github.com/PiRanhaLysis/Phorcys.git
+requests
+pycurl

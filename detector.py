@@ -1,18 +1,27 @@
 
 import asyncore
-import socket
+import requests
 import logging
 import time
-import json
 import sys
 import re
 import os
+import pycurl
+from io import BytesIO
 from threading import Thread
 from phorcys.decoders.deepdecoder import DeepDecoder
 from phorcys.inspectors.yara_inspector import YaraInspector
 
+
 HOST = ''
 PORT = 8080
+
+dn = {
+    b'javaCodeBase': None,
+    b'javaFactory': None,
+    b'javaClassName': None,
+    b'objectClass': None,
+}
 
 # Create console\stream handler
 logging.basicConfig(
@@ -40,6 +49,7 @@ class Handler(asyncore.dispatcher_with_send):
         self.addr = addr
         self.dd = DeepDecoder()
         self.inspector = YaraInspector(open('log4j_exploit.yara', 'r').read())
+        self.curl = pycurl.Curl()
 
     def handle_read(self):
         data = self.recv(16384).strip()
@@ -54,32 +64,42 @@ class Handler(asyncore.dispatcher_with_send):
                     for rule in leaf._matching_rules:
                         rule_name = rule.get('rule')
                         if 'Log4Shell' in rule_name:
-                            with open(f'logs/logs_{int(time.time())}_data.bin', 'wb') as f:
+                            with open(f'logs/logs_{int(time.time())}_init.bin', 'wb') as f:
                                 f.write(data)
                             self.analyze_payload(data, leaf.raw_data)
 
     def analyze_payload(self, data, payload):
         x = re.findall('\$\{.*?\/\/(.*?)\}', payload)
         if len(x) >= 1:
-            for p in x:
+            for url in x:
+                url = 'ldap://' + url
                 logging.info(f'Found payload jndi from {repr(self.addr)}')
-                logging.info(f'URL: {p}')
-                try:
-                    h, p = p.split('/')[0].split(':')
-                except:
-                    h = p.split('/')[0]
-                    p = 389
-                Thread(target=self.get_payload, args=[h, int(p)]).start()
+                logging.info(f'URL: {url}')
+                Thread(target=self.get_payload, args=[url]).start()
 
-    def get_payload(self, h, p):
+    def get_payload(self, url):
         try:
-            with open(f'logs/logs_{int(time.time())}.bin', 'wb') as f:
-                s = socket.socket()
-                s.connect((h, p))
-                r = s.recv(16384)
-                f.write(r)
-            s.close()
+            buffer = BytesIO()
+            with open(f'logs/logs_{int(time.time())}_ldap.bin', 'wb') as f:
+                self.curl.setopt(self.curl.URL, url)
+                self.curl.setopt(self.curl.FOLLOWLOCATION, True)
+                self.curl.setopt(self.curl.WRITEDATA, buffer)
+                self.curl.perform()
+                self.curl.close()
+                f.write(buffer.read())
+                buffer.seek(0)
+
+            for line in buffer.readlines():
+                line = line.strip()
+                if line:
+                    for k in dn.keys():
+                        if line.startswith(k):
+                            dn[k] = line.replace(k+b': ', b'').strip()
+            r = requests.get(dn[b'javaCodeBase'], headers={'User-Agent': 'Java-http-client'})
+            with open(f'logs/logs_{int(time.time())}_payload.bin', 'wb') as f:
+                f.write(r.content)
         except Exception as e:
+            raise
             logging.error(e)
 
 
