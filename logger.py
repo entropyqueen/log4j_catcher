@@ -1,8 +1,10 @@
-import os
-from time import time
-import uuid
-from opensearchpy import OpenSearch
 import base64
+import datetime
+import os
+import uuid
+from time import time
+
+from opensearchpy import OpenSearch
 
 
 class DataLogger:
@@ -31,8 +33,55 @@ class DataLogger:
                 }
             }
         }
+        index_mapping = {
+            "properties": {
+                "contacted_port": {
+                    "type": "integer"
+                },
+                "dn_payload": {
+                    "type": "object"
+                },
+                "incoming_request_headers": {
+                    "type": "object"
+                },
+                "jndi_url": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "originating_ip": {
+                    "type": "ip"
+                },
+                "payload": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "payload_url": {
+                    "type": "text",
+                    "fields": {
+                        "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                        }
+                    }
+                },
+                "timestamp": {
+                    "type": "date"
+                }
+            }
+        }
         if not self.os_client.indices.exists(self.index_name):
             self.os_client.indices.create(self.index_name, body=index_body)
+            self.os_client.indices.put_mapping(index=self.index_name, body=index_mapping)
 
     def log_event(self,
                   originating_ip: str,
@@ -43,7 +92,7 @@ class DataLogger:
                   payload_url: str,
                   payload: bytes):
         document = {
-            'timestamp': time(),
+            'timestamp': datetime.datetime.utcnow(),
             'originating_ip': originating_ip,
             'contacted_port': contacted_port,
             'incoming_request_headers': incoming_request_headers,
@@ -67,8 +116,7 @@ if __name__ == "__main__":
         2344,
         [{'UA': 'jndi'}],
         '${jndi:ldap://localhost}',
-        'DNsd f;oighj sr;iufh',
+        {'javaFactory': 'DNsd f;oighj sr;iufh'},
         'Payload URL',
         b'pojsoijsoidfj osjdfoijsodfjoj'
     )
-
