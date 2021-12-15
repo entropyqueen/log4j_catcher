@@ -7,7 +7,7 @@ The [Phorcys](https://github.com/PiRanhaLysis/Phorcys) dependency is used to dec
 
 ## Installation
 
-### Dependancies
+### Dependencies
 
 ```shell
 sudo apt install libcurl4-nss-dev libpython3.9-dev libnss3 libnss3-dev
