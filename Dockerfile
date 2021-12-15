@@ -3,7 +3,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y protobuf-compiler gcc git && \
-    apt install libcurl4-nss-dev libpython3.9-dev libnss3 libnss3-dev && \
+    apt install -y libcurl4-nss-dev libpython3.9-dev libnss3 libnss3-dev && \
     rm -rf /var/lib/apt/lists/*
 
 COPY log4j_exploit.yara .
