@@ -99,7 +99,6 @@ class Handler(asyncore.dispatcher_with_send):
             with open(f'logs/logs_{int(time.time())}_payload.bin', 'wb') as f:
                 f.write(r.content)
         except Exception as e:
-            raise
             logging.error(e)
 
 
