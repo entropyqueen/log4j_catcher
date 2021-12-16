@@ -1,4 +1,3 @@
-
 import asyncore
 import requests
 import logging
@@ -11,7 +10,6 @@ from io import BytesIO
 from threading import Thread
 from phorcys.decoders.deepdecoder import DeepDecoder
 from phorcys.inspectors.yara_inspector import YaraInspector
-
 
 HOST = ''
 PORT = 8080
@@ -43,13 +41,12 @@ logging.getLogger('').addHandler(fh)
 
 
 class Handler(asyncore.dispatcher_with_send):
-    
+
     def __init__(self, sock, addr):
         super().__init__(sock)
         self.addr = addr
         self.dd = DeepDecoder()
         self.inspector = YaraInspector(open('log4j_exploit.yara', 'r').read())
-        self.curl = pycurl.Curl()
 
     def handle_read(self):
         data = self.recv(16384).strip()
@@ -79,27 +76,31 @@ class Handler(asyncore.dispatcher_with_send):
 
     def get_payload(self, url):
         try:
-            buffer = BytesIO()
-            with open(f'logs/logs_{int(time.time())}_ldap.bin', 'wb') as f:
-                self.curl.setopt(self.curl.URL, url)
-                self.curl.setopt(self.curl.FOLLOWLOCATION, True)
-                self.curl.setopt(self.curl.WRITEDATA, buffer)
-                self.curl.perform()
-                self.curl.close()
-                f.write(buffer.read())
-                buffer.seek(0)
+            buff = BytesIO()
+            self.curl = pycurl.Curl()
+            self.curl.setopt(self.curl.URL, url)
+            self.curl.setopt(self.curl.FOLLOWLOCATION, True)
+            self.curl.setopt(self.curl.WRITEDATA, buff)
+            self.curl.perform()
+            self.curl.close()
+            buff.seek(0)
 
-            for line in buffer.readlines():
-                line = line.strip()
-                if line:
-                    for k in dn.keys():
-                        if line.startswith(k):
-                            dn[k] = line.replace(k+b': ', b'').strip()
-            r = requests.get(dn[b'javaCodeBase'], headers={'User-Agent': 'Java-http-client'})
+            with open(f'logs/logs_{int(time.time())}_ldap.bin', 'wb') as f:
+                for line in buff.readlines():
+                    line = line.strip()
+                    if line:
+                        for k in dn.keys():
+                            if line.startswith(k):
+                                dn[k] = line.replace(k + b': ', b'').strip()
+                    f.write(line + b'\n')
+
+            class_url = dn[b"javaCodeBase"] + dn[b"javaFactory"] + b'.class'
+            class_url = class_url.decode()
+            logging.info(f'Getting: {class_url}')
+            r = requests.get(class_url, headers={'User-Agent': 'Java-http-client'})
             with open(f'logs/logs_{int(time.time())}_payload.bin', 'wb') as f:
                 f.write(r.content)
         except Exception as e:
-            raise
             logging.error(e)
 
 
