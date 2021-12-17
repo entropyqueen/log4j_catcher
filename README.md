@@ -10,8 +10,10 @@ The [Phorcys](https://github.com/PiRanhaLysis/Phorcys) dependency is used to dec
 ### Dependancies
 
 ```shell
+sudo apt install protobuf-compiler
 sudo apt install libcurl4-nss-dev libpython3.9-dev libnss3 libnss3-dev
 ```
+The previous command works for python3.9 versions, you should change to the proper version you are using. However, the code is made for python3.7 or higher. 
 
 ```shell
 pip install -r requirements.txt
@@ -45,3 +47,26 @@ $ sudo python3 detector.py 80
 ```
 
 Data is logged into current directory path.
+
+## Troubleshooting
+
+### Ubuntu 18.04 lts
+
+On Ubuntu 18.04 the python3 package is version 3.6, which is incompatible with the script.
+
+
+To install python in higher version, you can follow this link: https://gist.github.com/plembo/6bc141a150cff0369574ce0b0a92f5e7
+
+
+Then create a virtualenv using
+
+```shell
+$ python3.9 -m venv ./env
+$ . ./env/bin/activate
+```
+
+It should be possible to install everything from now on.
+
+## Contact
+
+If you run into other issues, you can contact me on twitter @entropyqueen_ with a description of your issue.
