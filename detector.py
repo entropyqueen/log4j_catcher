@@ -119,6 +119,7 @@ class Server(asyncore.dispatcher):
         self.set_reuse_addr()
         self.bind((HOST, PORT))
         self.listen(1000)
+        logging.info(f'Log4j_catcher running on port {PORT}')
 
     def handle_accepted(self, sock, addr):
         logging.info('Incoming connection from %s' % repr(addr))
