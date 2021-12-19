@@ -1,4 +1,6 @@
 import asyncore
+import base64
+
 import requests
 import logging
 import time
@@ -19,6 +21,7 @@ dn = {
     b'javaFactory': None,
     b'javaClassName': None,
     b'objectClass': None,
+    b'javaSerializedData': None,
 }
 
 # Create console\stream handler
@@ -91,15 +94,19 @@ class Handler(asyncore.dispatcher_with_send):
                     if line:
                         for k in dn.keys():
                             if line.startswith(k):
-                                dn[k] = line.replace(k + b': ', b'').strip()
+                                dn[k] = line[len(k):].strip(b':').strip()
                     f.write(line + b'\n')
 
-            class_url = dn[b"javaCodeBase"] + dn[b"javaFactory"] + b'.class'
-            class_url = class_url.decode()
-            logging.info(f'Getting: {class_url}')
-            r = requests.get(class_url, headers={'User-Agent': 'Java-http-client'})
-            with open(f'logs/logs_{int(time.time())}_payload.bin', 'wb') as f:
-                f.write(r.content)
+            if dn[b"javaCodeBase"] is not None and dn[b"javaFactory"] is not None:
+                class_url = dn[b"javaCodeBase"] + dn[b"javaFactory"] + b'.class'
+                class_url = class_url.decode()
+                logging.info(f'Getting: {class_url}')
+                r = requests.get(class_url, headers={'User-Agent': 'Java-http-client'})
+                with open(f'logs/logs_{int(time.time())}_payload.bin', 'wb') as f:
+                    f.write(r.content)
+            elif dn[b"javaSerializedData"] is not None:
+                with open(f'logs/logs_{int(time.time())}_payload.bin', 'wb') as f:
+                    f.write(base64.b64decode(dn[b"javaSerializedData"]))
         except Exception as e:
             logging.error(e)
 
